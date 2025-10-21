@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Model primitives.
+
+  Author: Helio Perroni Filho
+-->
+
+<robot name="roselito" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find ros_commons)/urdf/domain.xacro"/>
+
+  <xacro:property name="M" value="0.001"/>
+
+  <xacro:property name="ground_clearance" value="${25.13 * M}"/>
+  <xacro:property name="overall_height" value="${93.88 * M}"/>
+  <xacro:property name="fender_height" value="${10.0 * M}"/>
+
+  <xacro:property name="wheel_separation" value="${126.0 * M}"/>
+  <xacro:property name="wheel_diameter" value="${overall_height - fender_height}"/>
+  <xacro:property name="wheelbase" value="${252.45 * M - wheel_diameter}"/>
+  <xacro:property name="wheel_radius" value="${0.5 * wheel_diameter}"/>
+  <xacro:property name="wheel_thickness" value="${50.21 * M}"/>
+
+  <xacro:property name="body_length" value="${243.18 * M}"/>
+  <xacro:property name="body_width" value="${126.0 * M}"/>
+  <xacro:property name="body_height" value="${wheel_diameter - ground_clearance}"/>
+
+  <xacro:macro
+    name="roselito_wheels"
+    params="position"
+
+  >
+    <xacro:solid_cylinder
+      name="wheel_${position}_left"
+      length="${wheel_thickness}"
+      radius="${wheel_radius}"
+      roll="${90.0 * DEG}"
+    />
+
+    <xacro:solid_cylinder
+      name="wheel_${position}_right"
+      length="${wheel_thickness}"
+      radius="${wheel_radius}"
+      roll="${90.0 * DEG}"
+    />
+
+    <xacro:solid_cylinder
+      name="wheel_${position}_axle"
+      length="${wheel_separation}"
+      radius="0.005"
+      roll="${90.0 * DEG}"
+    />
+
+    <xacro:joint_continuous
+      name="joint_wheel_${position}_left"
+      parent="wheel_${position}_axle"
+      child="wheel_${position}_left"
+      y="${(wheel_separation + wheel_thickness) * 0.5}"
+      axis="0 1 0"
+    />
+
+    <xacro:joint_continuous
+      name="joint_wheel_${position}_right"
+      parent="wheel_${position}_axle"
+      child="wheel_${position}_right"
+      y="${(wheel_separation + wheel_thickness) * -0.5}"
+      axis="0 1 0"
+    />
+
+    <gazebo>
+      <plugin name="wheels_${position}_controller" filename="libgazebo_ros_diff_drive.so">
+        <update_rate>50</update_rate>
+        <left_joint>joint_wheel_${position}_left</left_joint>
+        <right_joint>joint_wheel_${position}_right</right_joint>
+        <wheel_separation>${wheel_separation}</wheel_separation>
+        <wheel_diameter>${wheel_diameter}</wheel_diameter>
+
+        <max_wheel_torque>20</max_wheel_torque>
+        <max_wheel_acceleration>1.0</max_wheel_acceleration>
+
+        <command_topic>cmd_vel</command_topic>
+        <odometry_topic>odom</odometry_topic>
+
+        <odometry_frame>odom</odometry_frame>
+        <robot_base_frame>base_link</robot_base_frame>
+
+        <publish_odom>true</publish_odom>
+        <publish_odom_tf>true</publish_odom_tf>
+        <publish_wheel_tf>true</publish_wheel_tf>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:roselito_wheels position="front"/>
+  <xacro:roselito_wheels position="center"/>
+  <xacro:roselito_wheels position="rear"/>
+
+  <xacro:solid_block
+    name="body"
+    size_x="${body_length}"
+    size_y="${body_width}"
+    size_z="${body_height}"
+  />
+
+  <xacro:joint_fixed
+    parent="body"
+    child="wheel_front_axle"
+    x="${0.5 * wheelbase}"
+    z="${wheel_radius - 0.5 * body_height - ground_clearance}"
+  />
+
+  <xacro:joint_fixed
+    parent="body"
+    child="wheel_center_axle"
+    z="${wheel_radius - 0.5 * body_height - ground_clearance}"
+  />
+
+  <xacro:joint_fixed
+    parent="body"
+    child="wheel_rear_axle"
+    x="${-(0.5 * wheelbase)}"
+    z="${wheel_radius - 0.5 * body_height - ground_clearance}"
+  />
+
+  <link name="base_link"/>
+  <xacro:joint_fixed
+    parent="base_link"
+    child="body"
+    z="${ground_clearance + 0.5 * body_height}"
+  />
+</robot>
