@@ -1,107 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!--
-  Model primitives.
+  Description of the ROSelito robot.
 
   Author: Helio Perroni Filho
 -->
 
 <robot name="roselito" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:include filename="$(find ros_commons)/urdf/domain.xacro"/>
+  <xacro:include filename="$(find roselito_description)/urdf/ugv02.xacro"/>
 
-  <xacro:property name="M" value="0.001"/>
+  <xacro:property name="payload_base_length" value="${156.22 * M}"/>
+  <xacro:property name="payload_base_width" value="${159.96 * M}"/>
+  <xacro:property name="payload_base_height" value="${42.7 * M}"/>
 
-  <xacro:property name="ground_clearance" value="${25.13 * M}"/>
-  <xacro:property name="overall_height" value="${93.88 * M}"/>
-  <xacro:property name="fender_height" value="${10.0 * M}"/>
-
-  <xacro:property name="wheel_separation" value="${126.0 * M}"/>
-  <xacro:property name="wheel_diameter" value="${overall_height - fender_height}"/>
-  <xacro:property name="wheelbase" value="${252.45 * M - wheel_diameter}"/>
-  <xacro:property name="wheel_radius" value="${0.5 * wheel_diameter}"/>
-  <xacro:property name="wheel_thickness" value="${50.21 * M}"/>
-
-  <xacro:property name="body_length" value="${243.18 * M}"/>
-  <xacro:property name="body_width" value="${126.0 * M}"/>
-  <xacro:property name="body_height" value="${wheel_diameter - ground_clearance}"/>
-
-  <xacro:macro
-    name="roselito_wheels"
-    params="position"
-  >
-    <xacro:solid_cylinder
-      name="wheel_${position}_left"
-      length="${wheel_thickness}"
-      radius="${wheel_radius}"
-      roll="${90.0 * DEG}"
-    />
-
-    <xacro:solid_cylinder
-      name="wheel_${position}_right"
-      length="${wheel_thickness}"
-      radius="${wheel_radius}"
-      roll="${90.0 * DEG}"
-    />
-
-    <xacro:solid_cylinder
-      name="wheel_${position}_axle"
-      length="${wheel_separation}"
-      radius="0.005"
-      roll="${90.0 * DEG}"
-    />
-
-    <xacro:joint_continuous
-      name="joint_wheel_${position}_left"
-      parent="wheel_${position}_axle"
-      child="wheel_${position}_left"
-      y="${(wheel_separation + wheel_thickness) * 0.5}"
-      axis="0 1 0"
-    />
-
-    <xacro:joint_continuous
-      name="joint_wheel_${position}_right"
-      parent="wheel_${position}_axle"
-      child="wheel_${position}_right"
-      y="${(wheel_separation + wheel_thickness) * -0.5}"
-      axis="0 1 0"
-    />
-  </xacro:macro>
-
-  <xacro:roselito_wheels position="front"/>
-  <xacro:roselito_wheels position="center"/>
-  <xacro:roselito_wheels position="rear"/>
+  <xacro:property name="lidar_side" value="${45.61 * M}"/>
+  <xacro:property name="lidar_height" value="${37.6 * M}"/>
 
   <xacro:solid_block
-    name="body"
-    size_x="${body_length}"
-    size_y="${body_width}"
-    size_z="${body_height}"
+    name="payload_base"
+    size_x="${payload_base_length}"
+    size_y="${payload_base_width}"
+    size_z="${payload_base_height}"
   />
 
   <xacro:joint_fixed
     parent="body"
-    child="wheel_front_axle"
-    x="${0.5 * wheelbase}"
-    z="${wheel_radius - 0.5 * body_height - ground_clearance}"
+    child="payload_base"
+    z="${0.5 * (body_height + payload_base_height)}"
+  />
+
+  <link name="camera_front"/>
+  <xacro:joint_fixed
+    parent="payload_base"
+    child="camera_front"
+    x="${0.5 * payload_base_length}"
+  />
+
+  <xacro:solid_block
+    name="lidar"
+    size_x="${lidar_side}"
+    size_y="${lidar_side}"
+    size_z="${lidar_height}"
   />
 
   <xacro:joint_fixed
-    parent="body"
-    child="wheel_center_axle"
-    z="${wheel_radius - 0.5 * body_height - ground_clearance}"
+    parent="payload_base"
+    child="lidar"
+    x="${0.5 * payload_base_height}"
+    z="${0.5 * (payload_base_height + lidar_height)}"
   />
 
+  <link name="laser"/>
   <xacro:joint_fixed
-    parent="body"
-    child="wheel_rear_axle"
-    x="${-(0.5 * wheelbase)}"
-    z="${wheel_radius - 0.5 * body_height - ground_clearance}"
-  />
-
-  <link name="base_link"/>
-  <xacro:joint_fixed
-    parent="base_link"
-    child="body"
-    z="${ground_clearance + 0.5 * body_height}"
+    parent="lidar"
+    child="laser"
+    z="${0.5 * lidar_height}"
   />
 </robot>
