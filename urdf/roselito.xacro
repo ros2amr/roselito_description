@@ -29,7 +29,7 @@
     z="${0.5 * (body_height + payload_base_height)}"
   />
 
-  <link name="camera_front"/>
+  <xacro:camera_link name="camera_front"/>
   <xacro:joint_fixed
     parent="payload_base"
     child="camera_front"
