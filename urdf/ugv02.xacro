@@ -159,4 +159,10 @@
     child="body"
     z="${ground_clearance + 0.5 * body_height}"
   />
+
+  <link name="base_footprint"/>
+  <xacro:joint_fixed
+    parent="base_link"
+    child="base_footprint"
+  />
 </robot>
